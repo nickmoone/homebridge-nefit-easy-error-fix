@@ -8,6 +8,7 @@ module.exports = function(homebridge) {
 
   homebridge.registerAccessory('homebridge-nefit-easy', 'NefitEasy', NefitEasyAccessory);
   homebridge.registerAccessory('homebridge-nefit-easy', 'NefitEasyOutdoorTemp', NefitEasyAccessoryOutdoorTemp);
+  homebridge.registerAccessory('homebridge-nefit-easy', 'NefitEasyBoilerTemp', NefitEasyAccessoryBoilerTemp);
 };
 
 const nefitEasyServices = function() {
@@ -173,3 +174,69 @@ function NefitEasyAccessoryOutdoorTemp(log, config) {
 NefitEasyAccessoryOutdoorTemp.prototype.getTemperature = nefitEasyGetTemp;
 
 NefitEasyAccessoryOutdoorTemp.prototype.getServices = nefitEasyServices;
+
+const nefitEasyGetBoilerTemp = function(callback) {
+  this.log.debug('Getting %s temperature...', 'boiler');
+
+  deviceClient.supplyTemperature().then((status) => {
+    var temp = status.temperature;
+    console.log(status);
+    if (!isNaN(temp) && isFinite(temp)) {
+      this.log.debug('...%s temperature is %s', 'boiler', temp);
+      return callback(null, temp);
+    }
+    else {
+      this.log.debug('Request for temperature resulted in invalid value: %s', temp);
+
+      // Try one more time, this almost always results in a valid value.
+      deviceClient.supplyTemperature().then((newStatus) => {
+        var newTemp = newStatus.temperature;
+        if (!isNaN(newTemp) && isFinite(newTemp)) {
+          this.log.debug("Retry request for temperature resulted in valid value: %s", newTemp);
+          return callback(null, newTemp);
+        }
+        else {
+          this.log.debug("Retry request for temperature resulted in invalid value again: %s", newTemp);
+
+          // Return last known value, needed to keep service responsive for Siri.
+          return callback(null, this.service.getCharacteristic(Characteristic.CurrentTemperature).value);
+        }
+      });
+    }
+  }).catch((e) => {
+    console.error(e);
+    return callback(e);
+  });
+};
+
+function NefitEasyAccessoryBoilerTemp(log, config) {
+  this.log     = log;
+  this.name    = config.name;
+
+  // Make sure that the credentials are there.
+  var creds = config.options || config.authentication;
+  if (! creds || typeof creds.serialNumber !== 'string' ||
+      typeof creds.accessKey !== 'string' || typeof creds.password !== 'string') {
+    throw Error('[homebridge-nefit-easy] Invalid/missing credentials in configuration file.');
+  }
+
+  this.serialNumber = creds.serialNumber;
+  this.service = new Service.TemperatureSensor(this.name);
+
+  if (typeof deviceClient === 'undefined') {
+    deviceClient  = NefitEasyClient(creds);
+  }
+
+  // Establish connection with device.
+  deviceClient.connect().catch((e) => {
+    throw error(e);
+  });
+
+  this.service
+    .getCharacteristic(Characteristic.CurrentTemperature)
+    .on('get', this.getTemperature.bind(this));
+};
+
+NefitEasyAccessoryBoilerTemp.prototype.getTemperature = nefitEasyGetBoilerTemp;
+
+NefitEasyAccessoryBoilerTemp.prototype.getServices = nefitEasyServices;
