@@ -34,16 +34,11 @@ function NefitEasyAccessory(log, config) {
   this.service = new Service.Thermostat(this.name);
   
   if (typeof deviceClient === 'undefined') {
-    deviceClient  = NefitEasyClient(creds);
+    deviceClient = NefitEasyClient(creds);
   }
 
   // Establish connection with device.
   deviceClient.connect().catch((e) => {
-    throw error(e);
-  });
-
-  // Establish connection with device.
-  this.client.connect().catch((e) => {
     throw error(e);
   });
 
@@ -171,11 +166,11 @@ NefitEasyAccessory.prototype.setTargetState = function(state, callback) {
   this.log.debug('Setting target state to %s', state);
 
   if (state == Characteristic.TargetHeatingCoolingState.OFF) {
-    return this.client.setTemperature(5, callback);
+    return deviceClient.setTemperature(5, callback);
   }
   else if (state == Characteristic.TargetHeatingCoolingState.AUTO) {
     var currentTemp = this.service.getCharacteristic(Characteristic.CurrentTemperature).value;
-    return this.client.setTemperature(currentTemp+0.5, callback);
+    return deviceClient.setTemperature(currentTemp+0.5, callback);
   }
   else {
     return callback();
@@ -196,12 +191,14 @@ function NefitEasyAccessoryOutdoorTemp(log, config) {
   }
 
   this.serialNumber = creds.serialNumber;
-
   this.service = new Service.TemperatureSensor(this.name);
-  this.client  = NefitEasyClient(creds);
+  
+  if (typeof deviceClient === 'undefined') {
+    deviceClient = NefitEasyClient(creds);
+  }
 
   // Establish connection with device.
-  this.client.connect().catch((e) => {
+  deviceClient.connect().catch((e) => {
     throw error(e);
   });
 
