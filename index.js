@@ -192,7 +192,7 @@ function NefitEasyAccessoryOutdoorTemp(log, config) {
 
   this.serialNumber = creds.serialNumber;
   this.service = new Service.TemperatureSensor(this.name);
-  
+
   if (typeof deviceClient === 'undefined') {
     deviceClient = NefitEasyClient(creds);
   }
