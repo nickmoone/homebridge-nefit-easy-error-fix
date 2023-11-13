@@ -65,6 +65,7 @@ function NefitEasyAccessory(log, config) {
   this.service
     .getCharacteristic(Characteristic.TargetHeatingCoolingState)
     .on('get', this.getTargetState.bind(this))
+    .on('set', this.setTargetState.bind(this))
     .setProps(
       {validValues: [Characteristic.TargetHeatingCoolingState.OFF,
                      Characteristic.TargetHeatingCoolingState.AUTO]
@@ -147,7 +148,7 @@ NefitEasyAccessory.prototype.getCurrentState = function(callback) {
 };
 
 NefitEasyAccessory.prototype.getTargetState = function(callback) {
-  this.log.debug('Getting current state..');
+  this.log.debug('Getting target state..');
   
   var currentTemp = this.service
     .getCharacteristic(Characteristic.CurrentTemperature).value;
@@ -161,6 +162,18 @@ NefitEasyAccessory.prototype.getTargetState = function(callback) {
   else {
     return callback(null,
       Characteristic.TargetHeatingCoolingState.AUTO);
+  }
+};
+
+NefitEasyAccessory.prototype.setTargetState = function(state, callback) {
+  this.log.debug('Setting target state to %s', state);
+
+  if (state == Characteristic.TargetHeatingCoolingState.OFF) {
+    return this.client.setTemperature(5, callback);
+  }
+  else if (state == Characteristic.TargetHeatingCoolingState.AUTO) {
+    var currentTemp = this.service.getCharacteristic(Characteristic.CurrentTemperature).value;
+    return this.client.setTemperature(currentTemp+0.5, callback);
   }
 };
 
