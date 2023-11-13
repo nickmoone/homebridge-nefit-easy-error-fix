@@ -150,9 +150,9 @@ NefitEasyAccessory.prototype.getTargetState = function(callback) {
   this.log.debug('Getting current state..');
   
   var currentTemp = this.service
-    .getCharacteristic(Characteristic.CurrentTemperature);
+    .getCharacteristic(Characteristic.CurrentTemperature).value;
   var targetTemp = this.service
-    .getCharacteristic(Characteristic.TargetTemperature);
+    .getCharacteristic(Characteristic.TargetTemperature).value;
 
   if (currentTemp >= targetTemp) {
     return callback(null,
