@@ -1,5 +1,6 @@
 const NefitEasyClient = require('nefit-easy-commands');
 var Service, Characteristic;
+var deviceClient;
 
 module.exports = function(homebridge) {
   Service        = homebridge.hap.Service;
@@ -30,9 +31,16 @@ function NefitEasyAccessory(log, config) {
   }
 
   this.serialNumber = creds.serialNumber;
-
   this.service = new Service.Thermostat(this.name);
-  this.client  = NefitEasyClient(creds);
+  
+  if (typeof deviceClient === 'undefined') {
+    deviceClient  = NefitEasyClient(creds);
+  }
+
+  // Establish connection with device.
+  deviceClient.connect().catch((e) => {
+    throw error(e);
+  });
 
   // Establish connection with device.
   this.client.connect().catch((e) => {
@@ -75,9 +83,7 @@ function NefitEasyAccessory(log, config) {
 const nefitEasyGetTemp = function(type, prop, skipOutdoor, callback) {
   this.log.debug('Getting %s temperature...', type);
 
-  this.client.connect().then(() => {
-    return this.client.status(skipOutdoor);
-  }).then((status) => {
+  deviceClient.status(skipOutdoor).then((status) => {
     var temp = status[prop];
     if (!isNaN(temp) && isFinite(temp)) {
       this.log.debug('...%s temperature is %s', type, temp);
@@ -87,7 +93,7 @@ const nefitEasyGetTemp = function(type, prop, skipOutdoor, callback) {
       this.log.debug('Request for temperature resulted in invalid value: %s', temp);
 
       // Try one more time, this almost always results in a valid value.
-      this.client.status(skipOutdoor).then((newStatus) => {
+      deviceClient.status(skipOutdoor).then((newStatus) => {
         var newTemp = newStatus[prop];
         if (!isNaN(newTemp) && isFinite(newTemp)) {
           this.log.debug("Retry request for temperature resulted in valid value: %s", newTemp);
@@ -119,9 +125,7 @@ NefitEasyAccessory.prototype.setTemperature = function(temp, callback) {
   temp = Math.round(temp * 2) / 2;
 
   this.log.info('Setting temperature to %s', temp);
-  this.client.connect().then(() => {
-    return this.client.setTemperature(temp);
-  }).then(() => {
+  deviceClient.setTemperature(temp).then(() => {
     return callback();
   }).catch((e) => {
     return callback(e);
@@ -131,9 +135,7 @@ NefitEasyAccessory.prototype.setTemperature = function(temp, callback) {
 NefitEasyAccessory.prototype.getCurrentState = function(callback) {
   this.log.debug('Getting current state..');
 
-  this.client.connect().then(() => {
-    return this.client.status();
-  }).then((status) => {
+  deviceClient.status(true).then((status) => {
     var state     = status['boiler indicator'];
     var isHeating = state === 'central heating';
     this.log.debug('...current state is', state);
