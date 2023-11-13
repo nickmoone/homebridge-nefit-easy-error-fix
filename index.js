@@ -175,6 +175,9 @@ NefitEasyAccessory.prototype.setTargetState = function(state, callback) {
     var currentTemp = this.service.getCharacteristic(Characteristic.CurrentTemperature).value;
     return this.client.setTemperature(currentTemp+0.5, callback);
   }
+  else {
+    return callback();
+  }
 };
 
 NefitEasyAccessory.prototype.getServices = nefitEasyServices;
