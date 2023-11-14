@@ -152,7 +152,7 @@ NefitEasyAccessory.prototype.getTargetState = function(callback) {
   var targetTemp = this.service
     .getCharacteristic(Characteristic.TargetTemperature).value;
 
-  if (currentTemp > targetTemp) {
+  if (currentTemp > targetTemp+2) {
     return callback(null,
       Characteristic.TargetHeatingCoolingState.OFF);
   }
