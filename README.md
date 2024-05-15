@@ -53,7 +53,7 @@ Once you have that working, edit `~/.homebridge/config.json` and add a new acces
 * Replace `NEFIT_*` with the correct values;
 * Any additional options get passed to the [`nefit-easy-core` constructor](https://github.com/robertklep/nefit-easy-core#constructor).
 
-### Outdoor temperature
+### Outdoor temperature (optional)
 
 To also use the outdoor temperature measured by the Nefit Easy device, add a `NefitEasyOutdoorTemp` accessory to `~/.homebridge/config.json`:
 
@@ -73,6 +73,27 @@ To also use the outdoor temperature measured by the Nefit Easy device, add a `Ne
 ```
 
 *All credentials options should be set for both the `NefitEasy` and the `NefitEasyOutdoorTemp` device.*
+
+### Boiler temperature (optional)
+
+To also use the boiler temperature measured of the Nefit Easy device, add a `NefitEasyBoilerTemp` accessory to `~/.homebridge/config.json`:
+
+```
+"accessories": [
+    ...
+    {
+        "accessory": "NefitEasyBoilerTemp",
+        "name": "boilertemperatuur",
+        "options": {
+            "serialNumber" : "NEFIT_SERIAL_NUMBER",
+            "accessKey"    : "NEFIT_ACCESS_KEY",
+            "password"     : "NEFIT_PASSWORD"
+        }
+    }
+]
+```
+
+*All credentials options should be set for both the `NefitEasy` and the `NefitEasyBoilerTemp` device.*
 
 ## Supported actions
 
