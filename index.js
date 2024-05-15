@@ -180,7 +180,6 @@ const nefitEasyGetBoilerTemp = function(callback) {
 
   deviceClient.supplyTemperature().then((status) => {
     var temp = status.temperature;
-    console.log(status);
     if (!isNaN(temp) && isFinite(temp)) {
       this.log.debug('...%s temperature is %s', 'boiler', temp);
       return callback(null, temp);
